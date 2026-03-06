@@ -1,0 +1,76 @@
+PIX — Web Photo Gallery
+=======================
+
+A self-contained web photo gallery.  Upload photos, run one script,
+then browse via any web browser.  No database, no framework.
+
+
+REQUIREMENTS
+------------
+  - Perl 5.14+  (JSON::PP is a core module; no extra installs)
+  - ImageMagick  (provides `convert` and `identify`)
+  - A web server with CGI support  (Apache, nginx+fcgiwrap, etc.)
+
+
+SETUP
+-----
+1. Copy all pix files into your photos directory:
+
+     pix-init.pl   pix-init.cgi   index.html   pix.js   pix.css
+
+2. Make the scripts executable:
+
+     chmod +x pix-init.pl pix-init.cgi
+
+3. On Apache, ensure the directory allows CGI execution, e.g.:
+
+     Options +ExecCGI
+     AddHandler cgi-script .cgi
+
+
+INITIALIZATION
+--------------
+Run from the command line (recommended for large collections):
+
+     perl pix-init.pl /path/to/your/gallery
+
+Or let the browser trigger it by visiting:
+
+     http://your-server/gallery/pix-init.cgi
+
+  The web interface shows a live log while photos are processed.
+  Once complete it redirects to the gallery automatically.
+
+Re-run pix-init.pl at any time to pick up new or changed photos.
+Existing thumbnails are skipped if already up to date.
+
+
+WHAT GETS GENERATED
+--------------------
+A  _pix/  directory is created inside the gallery:
+
+    _pix/
+      index.json          directory tree + photo metadata
+      log.txt             initialization log
+      thumb/              150 px thumbnails  (JPEG)
+      medium/             800 px images      (JPEG, used in lightbox)
+      large/              1600 px images     (JPEG, used for full-screen)
+
+The subdirectory structure of _pix/thumb/ etc. mirrors the source tree.
+
+
+SUPPORTED FORMATS
+-----------------
+jpg  jpeg  png  webp  gif   (case-insensitive)
+Originals are kept as-is; generated sizes are always JPEG.
+
+
+BROWSER CONTROLS
+----------------
+  Click directory card       Enter subdirectory
+  Click photo thumbnail      Open lightbox (medium size)
+  ‹  ›  buttons              Previous / next photo
+  Arrow Left / Right keys    Previous / next photo
+  Escape                     Close lightbox
+  "Full size ↗"              Open 1600 px version in new tab
+  "Download original"        Download the original file

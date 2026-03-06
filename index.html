@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pix Gallery</title>
+  <link rel="stylesheet" href="pix.css">
+</head>
+<body>
+  <header>
+    <h1>Pix</h1>
+  </header>
+
+  <main id="app">
+    <p class="loading">Loading&#x2026;</p>
+  </main>
+
+  <!-- Lightbox (hidden until a photo is clicked) -->
+  <div id="lightbox" class="hidden" role="dialog" aria-modal="true" aria-label="Photo viewer">
+    <div class="lb-overlay" onclick="closeLightbox()"></div>
+    <div class="lb-panel">
+      <div class="lb-header">
+        <span class="lb-title"></span>
+        <span class="lb-counter"></span>
+        <a class="lb-fullscreen" target="_blank" rel="noopener">Full&#x202F;size&#x202F;&#x2197;</a>
+        <a class="lb-download">Download&#x202F;original</a>
+        <button class="lb-close" onclick="closeLightbox()" aria-label="Close">&#x2715;</button>
+      </div>
+      <div class="lb-body">
+        <button class="lb-prev" onclick="lbPrev()" aria-label="Previous photo">&#x2039;</button>
+        <img class="lb-img" src="" alt="">
+        <button class="lb-next" onclick="lbNext()" aria-label="Next photo">&#x203a;</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="pix.js"></script>
+</body>
+</html>
