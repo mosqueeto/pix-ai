@@ -171,13 +171,21 @@ main {
   font-size: .8rem;
   flex-shrink: 0;
 }
-.lb-header a {
+.lb-header a, .lb-fullscreen {
   color: var(--accent);
   text-decoration: none;
   font-size: .8rem;
   flex-shrink: 0;
 }
-.lb-header a:hover { text-decoration: underline; }
+.lb-header a:hover, .lb-fullscreen:hover { text-decoration: underline; }
+
+.lb-fullscreen {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
 
 .lb-close {
   background: none;
