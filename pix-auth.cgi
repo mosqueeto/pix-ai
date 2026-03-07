@@ -1,12 +1,12 @@
 #!/usr/bin/perl
 #
-# pix-auth.cgi — password gate for the pix gallery
+# pix-auth.cgi - password gate for the pix gallery
 #
 # Endpoints:
-#   GET  pix-auth.cgi              — show login form (or redirect if already authed)
-#   POST pix-auth.cgi              — submit password
-#   GET  pix-auth.cgi?action=check — JSON {ok:true/false} for JS polling
-#   GET  pix-auth.cgi?action=logout— clear session and redirect to login
+#   GET  pix-auth.cgi              - show login form (or redirect if already authed)
+#   POST pix-auth.cgi              - submit password
+#   GET  pix-auth.cgi?action=check - JSON {ok:true/false} for JS polling
+#   GET  pix-auth.cgi?action=logout- clear session and redirect to login
 #
 # Setup (run once from command line):
 #   perl pix-auth.cgi --set-password YOURPASSWORD
@@ -26,7 +26,7 @@ my $passwdf  = "$pix/.pix-passwd";
 my $COOKIE          = 'pix_session';
 my $SESSION_MAX_AGE = 30 * 86400;   # 30 days
 
-# ── Command-line: set password ────────────────────────────────────────────────
+# -- Command-line: set password -----------------------------------------------
 
 if (@ARGV && $ARGV[0] eq '--set-password') {
     my $pw = $ARGV[1] // '';
@@ -39,7 +39,7 @@ if (@ARGV && $ARGV[0] eq '--set-password') {
     exit;
 }
 
-# ── CGI ───────────────────────────────────────────────────────────────────────
+# -- CGI ----------------------------------------------------------------------
 
 my $method = $ENV{REQUEST_METHOD} // 'GET';
 my %Q = parse_qs(
@@ -49,7 +49,7 @@ my %Q = parse_qs(
 );
 my $action = $Q{action} // '';
 
-# ── JSON auth-check (called by pix.js on every page load) ────────────────────
+# -- JSON auth-check (called by pix.js on every page load) --------------------
 
 if ($action eq 'check') {
     print "Content-Type: application/json\r\n\r\n";
@@ -57,7 +57,7 @@ if ($action eq 'check') {
     exit;
 }
 
-# ── Logout ────────────────────────────────────────────────────────────────────
+# -- Logout -------------------------------------------------------------------
 
 if ($action eq 'logout') {
     del_session(cookie_token());
@@ -67,7 +67,7 @@ if ($action eq 'logout') {
     exit;
 }
 
-# ── Login POST ────────────────────────────────────────────────────────────────
+# -- Login POST ---------------------------------------------------------------
 
 if ($method eq 'POST') {
     if (check_password($Q{password} // '')) {
@@ -82,7 +82,7 @@ if ($method eq 'POST') {
     exit;
 }
 
-# ── GET: redirect if already authed, else show login ─────────────────────────
+# -- GET: redirect if already authed, else show login ------------------------
 
 if (valid_session()) {
     print "Content-Type: text/html\r\n\r\n";
@@ -94,7 +94,7 @@ if (valid_session()) {
     print login_page($hint);
 }
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# -- Helpers ------------------------------------------------------------------
 
 sub parse_qs {
     my %h;
@@ -179,7 +179,7 @@ sub login_page {
     return <<HTML;
 <!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pix &mdash; Login</title><style>
+<title>Pix -- Login</title><style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:#1a1a1a;color:#e0e0e0;
      display:flex;align-items:center;justify-content:center;min-height:100vh}
