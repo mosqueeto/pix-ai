@@ -13,6 +13,25 @@ let lbLarge  = false;  // true = showing 1600px; false = showing 800px
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 
 window.addEventListener('DOMContentLoaded', () => {
+  // Optional auth gate: if pix-auth.cgi exists and returns {ok:false}, redirect to login.
+  // If the CGI is absent or errors, proceed without auth (backward-compatible).
+  fetch('pix-auth.cgi?action=check')
+    .then(r => r.ok ? r.json() : null)
+    .then(d => {
+      if (d && !d.ok) { location.href = 'pix-auth.cgi'; return; }
+      if (d &&  d.ok) {
+        const a = document.createElement('a');
+        a.href = 'pix-auth.cgi?action=logout';
+        a.className = 'logout-link';
+        a.textContent = 'Logout';
+        document.querySelector('header').appendChild(a);
+      }
+      loadGallery();
+    })
+    .catch(() => loadGallery());
+});
+
+function loadGallery() {
   fetch('_pix/index.json')
     .then(r => {
       if (!r.ok) throw new Error(r.status === 404 ? 'not_initialized' : String(r.status));
@@ -32,7 +51,7 @@ window.addEventListener('DOMContentLoaded', () => {
         app.innerHTML = `<p class="msg-err">Error loading gallery: ${esc(err.message)}</p>`;
       }
     });
-});
+}
 
 function buildDirMap(node, path) {
   dirMap[path] = node;
@@ -215,13 +234,11 @@ function esc(s) {
 
 const _lbImg = document.querySelector('.lb-img');
 _lbImg.addEventListener('click', e => {
-  const frac = e.offsetX / e.currentTarget.offsetWidth;
-  if (frac < 0.2)      lbPrev();
-  else if (frac > 0.8) lbNext();
+  if (e.offsetX / e.currentTarget.offsetWidth < 0.5) lbPrev(); else lbNext();
 });
 _lbImg.addEventListener('mousemove', e => {
-  const frac = e.offsetX / e.currentTarget.offsetWidth;
-  e.currentTarget.style.cursor = (frac < 0.2 || frac > 0.8) ? 'pointer' : 'default';
+  e.currentTarget.style.cursor =
+    e.offsetX / e.currentTarget.offsetWidth < 0.5 ? 'w-resize' : 'e-resize';
 });
 
 function notInitHtml() {
