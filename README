@@ -16,11 +16,11 @@ SETUP
 -----
 1. Copy all pix files into your photos directory:
 
-     pix-init.pl   pix-init.cgi   index.html   pix.js   pix.css
+     pix-init.pl   pix-init.cgi   pix-auth.cgi   index.html   pix.js   pix.css
 
 2. Make the scripts executable:
 
-     chmod +x pix-init.pl pix-init.cgi
+     chmod +x pix-init.pl pix-init.cgi pix-auth.cgi
 
 3. On Apache, ensure the directory allows CGI execution, e.g.:
 
@@ -68,9 +68,27 @@ Originals are kept as-is; generated sizes are always JPEG.
 BROWSER CONTROLS
 ----------------
   Click directory card       Enter subdirectory
-  Click photo thumbnail      Open lightbox (medium size)
+  Click photo thumbnail      Open lightbox (800 px view)
+  Left half of image         Previous photo
+  Right half of image        Next photo
   ‹  ›  buttons              Previous / next photo
   Arrow Left / Right keys    Previous / next photo
+  "Full size ↗"              Switch lightbox to 1600 px view
+  "Medium ↙"                 Switch back to 800 px view
   Escape                     Close lightbox
-  "Full size ↗"              Open 1600 px version in new tab
   "Download original"        Download the original file
+
+
+AUTHENTICATION (optional)
+--------------------------
+To require a password before viewing the gallery, run once on the server:
+
+     perl pix-auth.cgi --set-password YOURPASSWORD
+
+This writes a hashed password to _pix/.pix-passwd.  From that point on,
+visitors are shown a login form and must enter the password to proceed.
+A session cookie is set on success and lasts 30 days.  A "Logout" link
+appears in the gallery header.
+
+To change the password, re-run the same command with the new password.
+To disable authentication, delete _pix/.pix-passwd.
