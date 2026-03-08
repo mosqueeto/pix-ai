@@ -200,7 +200,6 @@ function renderLightbox() {
   lb.querySelector('.lb-title').textContent   = p.name;
   lb.querySelector('.lb-counter').textContent = `${lbIndex + 1}\u202F/\u202F${lbPhotos.length}`;
   lb.querySelector('.lb-download').href       = origUrl(p);
-  lb.querySelector('.lb-download').setAttribute('download', p.name);
   lb.querySelector('.lb-prev').disabled       = lbIndex === 0;
   lb.querySelector('.lb-next').disabled       = lbIndex === lbPhotos.length - 1;
 
