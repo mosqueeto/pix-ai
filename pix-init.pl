@@ -134,7 +134,58 @@ sub scan_dir {
     };
 }
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+# -- Cleanup: remove orphaned generated files ---------------------------------
+
+# Build the set of jpg paths that should exist under each size dir.
+# e.g. a photo at "vacation/beach.png" => key "vacation/beach.jpg"
+sub collect_gen_paths {
+    my ($node, $set) = @_;
+    for my $p (@{$node->{photos}}) {
+        (my $jpg = $p->{path}) =~ s/\.[^.]+$/.jpg/;
+        $set->{$jpg} = 1;
+    }
+    collect_gen_paths($_, $set) for @{$node->{dirs}};
+}
+
+# Recursively walk one size directory, removing unexpected .jpg files and
+# any directories that are empty after removal.
+sub clean_size_dir {
+    my ($base, $dir, $expected, $count_ref) = @_;
+    opendir(my $dh, $dir) or return;
+    my @entries = grep { !/^\./ } readdir($dh);
+    closedir($dh);
+
+    for my $e (@entries) {
+        my $path = "$dir/$e";
+        if (-d $path) {
+            clean_size_dir($base, $path, $expected, $count_ref);
+            rmdir $path;   # no-op unless the dir is now empty
+        } elsif ($e =~ /\.jpg$/i) {
+            my $rel = substr($path, length($base) + 1);
+            unless ($expected->{$rel}) {
+                unlink $path;
+                log_msg("  cleanup: $rel");
+                $$count_ref++;
+            }
+        }
+    }
+}
+
+sub cleanup_orphans {
+    my ($root, $tree) = @_;
+    my %expected;
+    collect_gen_paths($tree, \%expected);
+
+    my $count = 0;
+    for my $sz (@SIZE_ORDER) {
+        my $sz_dir = "$root/$PIX_DIR/$sz";
+        next unless -d $sz_dir;
+        clean_size_dir($sz_dir, $sz_dir, \%expected, \$count);
+    }
+    log_msg("Cleanup: $count orphaned file(s) removed.");
+}
+
+# -- Main ---------------------------------------------------------------------
 
 sub main {
     my $dir = @_ ? shift : '.';
@@ -151,6 +202,9 @@ sub main {
     for my $sz (@SIZE_ORDER) { make_path("$pix_dir/$sz"); }
 
     my $tree = scan_dir($dir, undef);
+
+    log_msg("");
+    cleanup_orphans($dir, $tree);
 
     my $index = {
         version   => 1,
