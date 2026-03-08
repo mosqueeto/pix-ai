@@ -120,7 +120,7 @@ sub scan_dir {
     # Cover image: first photo in this subtree (for directory card preview)
     my $cover;
     if (@photos) {
-        $cover = thumb_path('medium', $photos[0]{path});
+        $cover = thumb_path('thumb', $photos[0]{path});
     } else {
         for my $sub (@subdirs) { if ($sub->{cover}) { $cover = $sub->{cover}; last; } }
     }
@@ -188,7 +188,23 @@ sub cleanup_orphans {
 # -- Main ---------------------------------------------------------------------
 
 sub main {
-    my $dir = @_ ? shift : '.';
+    my @args = @_;
+
+    # Parse flags: -m (thumb+medium only) or -l (thumb+large only)
+    my ($mode_m, $mode_l) = (0, 0);
+    while (@args && $args[0] =~ /^-/) {
+        my $flag = shift @args;
+        if    ($flag eq '-m') { $mode_m = 1; }
+        elsif ($flag eq '-l') { $mode_l = 1; }
+        else  { die "Unknown option: $flag\nUsage: perl pix-init.pl [-m|-l] [/path/to/gallery]\n"; }
+    }
+    die "Options -m and -l are mutually exclusive.\n" if $mode_m && $mode_l;
+
+    @SIZE_ORDER = $mode_m ? qw(thumb medium)
+                : $mode_l ? qw(thumb large)
+                :           qw(thumb medium large);
+
+    my $dir = @args ? shift @args : '.';
     $dir = abs_path($dir);
     die "Directory not found: $dir\n" unless -d $dir;
 
@@ -209,6 +225,7 @@ sub main {
     my $index = {
         version   => 1,
         generated => strftime("%Y-%m-%dT%H:%M:%S", localtime),
+        sizes     => \@SIZE_ORDER,
         tree      => $tree,
     };
 

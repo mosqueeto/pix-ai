@@ -6,9 +6,11 @@ let gallery  = null;   // parsed index.json
 let dirMap   = {};     // path -> DirNode (built once on load)
 
 // Lightbox
-let lbPhotos = [];     // photos in the currently-displayed directory
-let lbIndex  = -1;     // index into lbPhotos; -1 = closed
-let lbLarge  = false;  // true = showing 1600px; false = showing 800px
+let lbPhotos  = [];     // photos in the currently-displayed directory
+let lbIndex   = -1;     // index into lbPhotos; -1 = closed
+let lbLarge   = false;  // true = showing large; false = showing medium
+let hasMedium = true;   // set from gallery.sizes after index.json loads
+let hasLarge  = true;   // set from gallery.sizes after index.json loads
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 
@@ -39,6 +41,9 @@ function loadGallery() {
     })
     .then(data => {
       gallery = data;
+      const sz = gallery.sizes || ['thumb', 'medium', 'large'];
+      hasMedium = sz.includes('medium');
+      hasLarge  = sz.includes('large');
       buildDirMap(gallery.tree, '');
       window.addEventListener('hashchange', navigate);
       navigate();
@@ -167,13 +172,15 @@ function makePhotoCard(photo, index) {
 
 function openLightbox(index) {
   lbIndex = index;
-  lbLarge = false;
+  lbLarge = !hasMedium;   // start in large if medium was not generated
   renderLightbox();
   document.getElementById('lightbox').classList.remove('hidden');
   document.getElementById('lightbox').focus();
-  // Preload large version silently
-  const large = new Image();
-  large.src = largeUrl(lbPhotos[index]);
+  // Preload large version silently (only if it exists)
+  if (hasLarge) {
+    const large = new Image();
+    large.src = largeUrl(lbPhotos[index]);
+  }
 }
 
 function closeLightbox() {
@@ -188,18 +195,26 @@ function renderLightbox() {
   const p  = lbPhotos[lbIndex];
   const lb = document.getElementById('lightbox');
 
-  lb.querySelector('.lb-img').src                    = lbLarge ? largeUrl(p) : mediumUrl(p);
-  lb.querySelector('.lb-img').alt                    = p.name;
-  lb.querySelector('.lb-title').textContent          = p.name;
-  lb.querySelector('.lb-counter').textContent        = `${lbIndex + 1}\u202F/\u202F${lbPhotos.length}`;
-  lb.querySelector('.lb-fullscreen').textContent     = lbLarge ? 'Medium\u202F\u2199' : 'Full\u202Fsize\u202F\u2197';
-  lb.querySelector('.lb-download').href              = origUrl(p);
+  lb.querySelector('.lb-img').src             = lbLarge ? largeUrl(p) : mediumUrl(p);
+  lb.querySelector('.lb-img').alt             = p.name;
+  lb.querySelector('.lb-title').textContent   = p.name;
+  lb.querySelector('.lb-counter').textContent = `${lbIndex + 1}\u202F/\u202F${lbPhotos.length}`;
+  lb.querySelector('.lb-download').href       = origUrl(p);
   lb.querySelector('.lb-download').setAttribute('download', p.name);
-  lb.querySelector('.lb-prev').disabled              = lbIndex === 0;
-  lb.querySelector('.lb-next').disabled              = lbIndex === lbPhotos.length - 1;
+  lb.querySelector('.lb-prev').disabled       = lbIndex === 0;
+  lb.querySelector('.lb-next').disabled       = lbIndex === lbPhotos.length - 1;
+
+  const btn = lb.querySelector('.lb-fullscreen');
+  if (hasMedium && hasLarge) {
+    btn.classList.remove('hidden');
+    btn.textContent = lbLarge ? 'Medium\u202F\u2199' : 'Full\u202Fsize\u202F\u2197';
+  } else {
+    btn.classList.add('hidden');
+  }
 }
 
 function lbToggleLarge() {
+  if (!hasMedium || !hasLarge) return;
   lbLarge = !lbLarge;
   renderLightbox();
 }

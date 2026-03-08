@@ -1,6 +1,8 @@
 /* ── Reset & custom properties ──────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+html { font-size: 120%; }  /* scale all rem-based sizes up ~20% */
+
 :root {
   --bg:      #1a1a1a;
   --bg2:     #242424;
