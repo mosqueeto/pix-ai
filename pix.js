@@ -258,6 +258,22 @@ function esc(s) {
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+// ── Touch swipe: left = next, right = prev ────────────────────────────────────
+
+let _touchStartX = null;
+
+document.getElementById('lightbox').addEventListener('touchstart', e => {
+  _touchStartX = e.touches[0].clientX;
+}, { passive: true });
+
+document.getElementById('lightbox').addEventListener('touchend', e => {
+  if (_touchStartX === null) return;
+  const dx = e.changedTouches[0].clientX - _touchStartX;
+  _touchStartX = null;
+  if (Math.abs(dx) < 50) return;   // too short to be a swipe
+  if (dx < 0) lbNext(); else lbPrev();
+}, { passive: true });
+
 // ── Image click zones: left 20% = prev, right 20% = next ──────────────────────
 
 const _lbImg = document.querySelector('.lb-img');
