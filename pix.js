@@ -12,6 +12,8 @@ let lbLarge   = false;  // true = showing large; false = showing medium
 let hasMedium = true;   // set from gallery.sizes after index.json loads
 let hasLarge  = true;   // set from gallery.sizes after index.json loads
 
+const _origExists = {};  // cache: original file URL -> true/false
+
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -199,7 +201,19 @@ function renderLightbox() {
   lb.querySelector('.lb-img').alt             = p.name;
   lb.querySelector('.lb-title').textContent   = p.name;
   lb.querySelector('.lb-counter').textContent = `${lbIndex + 1}\u202F/\u202F${lbPhotos.length}`;
-  lb.querySelector('.lb-download').href       = origUrl(p);
+  const origLink = lb.querySelector('.lb-download');
+  origLink.href = origUrl(p);
+  origLink.classList.add('hidden');
+  if (gallery.show_orig !== false) {
+    const url = origUrl(p);
+    if (url in _origExists) {
+      if (_origExists[url]) origLink.classList.remove('hidden');
+    } else {
+      fetch(url, { method: 'HEAD' })
+        .then(r => { _origExists[url] = r.ok; if (r.ok) origLink.classList.remove('hidden'); })
+        .catch(() => { _origExists[url] = false; });
+    }
+  }
   lb.querySelector('.lb-prev').disabled       = lbIndex === 0;
   lb.querySelector('.lb-next').disabled       = lbIndex === lbPhotos.length - 1;
 

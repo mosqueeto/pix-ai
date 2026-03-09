@@ -191,12 +191,13 @@ sub main {
     my @args = @_;
 
     # Parse flags: -m (thumb+medium only) or -l (thumb+large only)
-    my ($mode_m, $mode_l) = (0, 0);
+    my ($mode_m, $mode_l, $no_orig) = (0, 0, 0);
     while (@args && $args[0] =~ /^-/) {
         my $flag = shift @args;
-        if    ($flag eq '-m') { $mode_m = 1; }
-        elsif ($flag eq '-l') { $mode_l = 1; }
-        else  { die "Unknown option: $flag\nUsage: perl pix-init.pl [-m|-l] [/path/to/gallery]\n"; }
+        if    ($flag eq '-m') { $mode_m  = 1; }
+        elsif ($flag eq '-l') { $mode_l  = 1; }
+        elsif ($flag eq '-n') { $no_orig = 1; }
+        else  { die "Unknown option: $flag\nUsage: perl pix-init.pl [-m|-l] [-n] [/path/to/gallery]\n"; }
     }
     die "Options -m and -l are mutually exclusive.\n" if $mode_m && $mode_l;
 
@@ -226,6 +227,7 @@ sub main {
         version   => 1,
         generated => strftime("%Y-%m-%dT%H:%M:%S", localtime),
         sizes     => \@SIZE_ORDER,
+        show_orig => $no_orig ? JSON::PP::false : JSON::PP::true,
         tree      => $tree,
     };
 
