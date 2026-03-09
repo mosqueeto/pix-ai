@@ -185,6 +185,41 @@ sub cleanup_orphans {
     log_msg("Cleanup: $count orphaned file(s) removed.");
 }
 
+# -- Help ---------------------------------------------------------------------
+
+sub print_help {
+    print <<'HELP';
+Usage: perl pix-init.pl [OPTIONS] [/path/to/gallery]
+
+Scans a directory tree for photos, generates resized JPEG versions with
+ImageMagick, and writes _pix/index.json for the pix JavaScript gallery.
+Safe to re-run: existing files are skipped if already up to date, and
+orphaned generated files are removed.
+
+If no gallery path is given, the current directory is used.
+
+Options:
+  -m          Generate thumbnail + medium (800px) only; skip large (1600px)
+  -l          Generate thumbnail + large (1600px) only; skip medium (800px)
+  -n          Do not expose original files in the gallery viewer
+  -h, --help  Show this help and exit
+
+  -m and -l are mutually exclusive.  -n may be combined with either.
+
+Generated sizes:
+  thumb   150px  (used in the photo grid)
+  medium  800px  (default lightbox view)
+  large   1600px (full-size lightbox view)
+
+Output written to _pix/ inside the gallery directory:
+  index.json   photo tree and metadata
+  thumb/       150px JPEG thumbnails
+  medium/      800px JPEGs  (unless -l)
+  large/       1600px JPEGs (unless -m)
+  log.txt      progress log
+HELP
+}
+
 # -- Main ---------------------------------------------------------------------
 
 sub main {
@@ -194,10 +229,11 @@ sub main {
     my ($mode_m, $mode_l, $no_orig) = (0, 0, 0);
     while (@args && $args[0] =~ /^-/) {
         my $flag = shift @args;
-        if    ($flag eq '-m') { $mode_m  = 1; }
-        elsif ($flag eq '-l') { $mode_l  = 1; }
-        elsif ($flag eq '-n') { $no_orig = 1; }
-        else  { die "Unknown option: $flag\nUsage: perl pix-init.pl [-m|-l] [-n] [/path/to/gallery]\n"; }
+        if    ($flag eq '-m')                    { $mode_m  = 1; }
+        elsif ($flag eq '-l')                    { $mode_l  = 1; }
+        elsif ($flag eq '-n')                    { $no_orig = 1; }
+        elsif ($flag eq '-h' || $flag eq '--help') { print_help(); exit 0; }
+        else  { die "Unknown option: $flag\nRun with -h for help.\n"; }
     }
     die "Options -m and -l are mutually exclusive.\n" if $mode_m && $mode_l;
 
