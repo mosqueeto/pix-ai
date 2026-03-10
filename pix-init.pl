@@ -21,7 +21,7 @@ use POSIX           qw(strftime);
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
-my $PIX_VERSION = '1.00';
+my $PIX_VERSION = '1.01';
 
 my $PIX_DIR   = '_pix';
 my @SIZE_ORDER = qw(thumb medium large);
