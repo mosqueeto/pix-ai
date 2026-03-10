@@ -265,18 +265,34 @@ function esc(s) {
 // ── Touch swipe: left = next, right = prev ────────────────────────────────────
 
 let _touchStartX = null;
+let _touchStartY = null;
 
-document.getElementById('lightbox').addEventListener('touchstart', e => {
-  _touchStartX = e.touches[0].clientX;
-}, { passive: true });
+(function() {
+  const lb = document.getElementById('lightbox');
 
-document.getElementById('lightbox').addEventListener('touchend', e => {
-  if (_touchStartX === null) return;
-  const dx = e.changedTouches[0].clientX - _touchStartX;
-  _touchStartX = null;
-  if (Math.abs(dx) < 50) return;   // too short to be a swipe
-  if (dx < 0) lbNext(); else lbPrev();
-}, { passive: true });
+  lb.addEventListener('touchstart', e => {
+    _touchStartX = e.touches[0].clientX;
+    _touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  // passive:false so we can call preventDefault() to stop the browser
+  // from stealing horizontal swipes for its own back/forward navigation.
+  lb.addEventListener('touchmove', e => {
+    if (_touchStartX === null) return;
+    const dx = Math.abs(e.touches[0].clientX - _touchStartX);
+    const dy = Math.abs(e.touches[0].clientY - _touchStartY);
+    if (dx > dy && dx > 10) e.preventDefault();
+  }, { passive: false });
+
+  lb.addEventListener('touchend', e => {
+    if (_touchStartX === null) return;
+    const dx = e.changedTouches[0].clientX - _touchStartX;
+    _touchStartX = null;
+    _touchStartY = null;
+    if (Math.abs(dx) < 50) return;
+    if (dx < 0) lbNext(); else lbPrev();
+  }, { passive: true });
+})();
 
 // ── Image click zones: left 20% = prev, right 20% = next ──────────────────────
 
