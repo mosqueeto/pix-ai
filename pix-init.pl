@@ -21,6 +21,8 @@ use POSIX           qw(strftime);
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
+my $PIX_VERSION = '1.00';
+
 my $PIX_DIR   = '_pix';
 my @SIZE_ORDER = qw(thumb medium large);
 my %SIZE      = (thumb => 150,  medium => 800,  large => 1600);
@@ -188,6 +190,7 @@ sub cleanup_orphans {
 # -- Help ---------------------------------------------------------------------
 
 sub print_help {
+    print "pix-init $PIX_VERSION\n\n";
     print <<'HELP';
 Usage: perl pix-init.pl [OPTIONS] [/path/to/gallery]
 
@@ -249,7 +252,7 @@ sub main {
     make_path($pix_dir);
     open($log_fh, '>', "$pix_dir/log.txt") or undef $log_fh;
 
-    log_msg("pix-init: $dir");
+    log_msg("pix-init $PIX_VERSION: $dir");
     log_msg("");
 
     for my $sz (@SIZE_ORDER) { make_path("$pix_dir/$sz"); }

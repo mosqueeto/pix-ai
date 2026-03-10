@@ -242,6 +242,14 @@ main {
 .lb-prev:hover, .lb-next:hover  { background: rgba(0,0,0,.75); }
 .lb-prev:disabled, .lb-next:disabled { opacity: .15; cursor: default; }
 
+/* ── Footer ──────────────────────────────────────────────────────────────────── */
+.pix-footer {
+  text-align: center;
+  padding: 1.5rem;
+  font-size: .75rem;
+  color: #444;
+}
+
 /* ── Responsive ──────────────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
   .grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: .6rem; }

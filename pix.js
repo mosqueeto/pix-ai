@@ -1,5 +1,7 @@
 'use strict';
 
+const PIX_VERSION = '1.00';
+
 // ── State ─────────────────────────────────────────────────────────────────────
 
 let gallery  = null;   // parsed index.json
@@ -17,6 +19,8 @@ const _origExists = {};  // cache: original file URL -> true/false
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 
 window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('pix-version').textContent = PIX_VERSION;
+
   // Optional auth gate: if pix-auth.cgi exists and returns {ok:false}, redirect to login.
   // If the CGI is absent or errors, proceed without auth (backward-compatible).
   fetch('pix-auth.cgi?action=check')
