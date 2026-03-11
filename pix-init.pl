@@ -14,6 +14,7 @@
 use strict;
 use warnings;
 use File::Basename  qw(basename dirname);
+use File::Copy      qw(copy);
 use File::Path      qw(make_path);
 use Cwd             qw(abs_path);
 use JSON::PP;
@@ -31,7 +32,9 @@ my %IMG_EXT   = map { $_ => 1 } qw(jpg jpeg png webp gif);
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-my $log_fh;   # set in main(); used for progress output
+my $log_fh;        # set in main(); used for progress output
+my $orig_dir;      # -o / -O: path to originals directory (undef = use gallery root)
+my $copy_originals = 0;  # -O: copy originals into gallery
 
 sub log_msg {
     my $msg = shift;
@@ -66,8 +69,9 @@ sub get_dimensions {
 
 sub generate_sizes {
     my ($root, $rel) = @_;
-    my $src        = "$root/$rel";
-    my $src_mtime  = (stat $src)[9];
+    my $src_root  = $orig_dir // $root;
+    my $src       = "$src_root/$rel";
+    my $src_mtime = (stat $src)[9];
 
     for my $sz (@SIZE_ORDER) {
         my $out_rel = thumb_path($sz, $rel);
@@ -84,13 +88,22 @@ sub generate_sizes {
         my $rc = system(@cmd);
         log_msg("  WARNING: convert failed for $rel ($sz)")  if $rc;
     }
+
+    if ($copy_originals) {
+        my $dst = "$root/$rel";
+        make_path(dirname($dst)) unless -d dirname($dst);
+        if (!-f $dst || (stat $dst)[9] < $src_mtime) {
+            copy($src, $dst) or log_msg("  WARNING: copy failed for $rel: $!");
+        }
+    }
 }
 
 # ── Directory scanner ─────────────────────────────────────────────────────────
 
 sub scan_dir {
     my ($root, $rel) = @_;
-    my $abs = $rel ? "$root/$rel" : $root;
+    my $scan_root = $orig_dir // $root;
+    my $abs       = $rel ? "$scan_root/$rel" : $scan_root;
 
     opendir(my $dh, $abs) or do {
         log_msg("WARNING: cannot open $abs: $!");
@@ -205,9 +218,14 @@ Options:
   -m          Generate thumbnail + medium (800px) only; skip large (1600px)
   -l          Generate thumbnail + large (1600px) only; skip medium (800px)
   -n          Do not expose original files in the gallery viewer
+  -o PATH     Read originals from PATH; generate sizes into gallery but do
+              not expose originals (no "Download original" link)
+  -O PATH     Read originals from PATH; copy them into the gallery and
+              expose via the "Download original" link
   -h, --help  Show this help and exit
 
   -m and -l are mutually exclusive.  -n may be combined with either.
+  -o and -O are mutually exclusive.  -m/-l may be combined with either.
 
 Generated sizes:
   thumb   150px  (used in the photo grid)
@@ -228,13 +246,20 @@ HELP
 sub main {
     my @args = @_;
 
-    # Parse flags: -m (thumb+medium only) or -l (thumb+large only)
+    # Parse flags
     my ($mode_m, $mode_l, $no_orig) = (0, 0, 0);
     while (@args && $args[0] =~ /^-/) {
         my $flag = shift @args;
-        if    ($flag eq '-m')                    { $mode_m  = 1; }
-        elsif ($flag eq '-l')                    { $mode_l  = 1; }
-        elsif ($flag eq '-n')                    { $no_orig = 1; }
+        if    ($flag eq '-m')                      { $mode_m  = 1; }
+        elsif ($flag eq '-l')                      { $mode_l  = 1; }
+        elsif ($flag eq '-n')                      { $no_orig = 1; }
+        elsif ($flag eq '-o' || $flag eq '-O') {
+            die "Options -o and -O are mutually exclusive.\n" if $orig_dir;
+            die "Option $flag requires a path argument.\n"    unless @args;
+            $orig_dir       = abs_path(shift @args);
+            die "Originals directory not found: $orig_dir\n"  unless -d $orig_dir;
+            $copy_originals = ($flag eq '-O') ? 1 : 0;
+        }
         elsif ($flag eq '-h' || $flag eq '--help') { print_help(); exit 0; }
         else  { die "Unknown option: $flag\nRun with -h for help.\n"; }
     }
@@ -253,6 +278,10 @@ sub main {
     open($log_fh, '>', "$pix_dir/log.txt") or undef $log_fh;
 
     log_msg("pix-init $PIX_VERSION: $dir");
+    if ($orig_dir) {
+        my $mode = $copy_originals ? 'copy originals (-O)' : 'no originals (-o)';
+        log_msg("Originals: $orig_dir  [$mode]");
+    }
     log_msg("");
 
     for my $sz (@SIZE_ORDER) { make_path("$pix_dir/$sz"); }
@@ -266,7 +295,8 @@ sub main {
         version   => 1,
         generated => strftime("%Y-%m-%dT%H:%M:%S", localtime),
         sizes     => \@SIZE_ORDER,
-        show_orig => $no_orig ? JSON::PP::false : JSON::PP::true,
+        show_orig => ($no_orig || ($orig_dir && !$copy_originals))
+                        ? JSON::PP::false : JSON::PP::true,
         tree      => $tree,
     };
 
