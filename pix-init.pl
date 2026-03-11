@@ -109,7 +109,7 @@ sub scan_dir {
         log_msg("WARNING: cannot open $abs: $!");
         return undef;
     };
-    my @entries = sort grep { !/^\./ && $_ ne $PIX_DIR } readdir($dh);
+    my @entries = sort grep { !/^\./ && ($orig_dir || $rel || $_ ne $PIX_DIR) } readdir($dh);
     closedir($dh);
 
     my (@photos, @subdirs);
