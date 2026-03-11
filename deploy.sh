@@ -7,7 +7,7 @@
 # Default destination is set below.  Override on the command line, e.g.:
 #   ./deploy.sh /var/www/html/othergallery
 
-DEST="${1:-/var/html/photos}"
+DEST="${1:-/var/www/html/photos}"
 
 FILES="index.html pix.js pix.css pix-init.pl pix-init.cgi pix-auth.cgi"
 
